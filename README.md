@@ -1,6 +1,6 @@
 # OpenCork
 
-**OpenCork** is an open-source DtC-focused compliance tool designed for wineries, crafted to simplify reporting and compliance processes while being free, accessible, and customizable. Built with Python, OpenCork focuses on providing essential compliance features without the complexity or cost of traditional platforms.
+**OpenCork** is an open-source DtC-focused compliance tool designed for U.S.-based small wineries, crafted to simplify reporting and compliance processes while being free, accessible, and customizable. Built with Python, OpenCork focuses on providing essential compliance features without the complexity or cost of traditional platforms.
 
 ---
 
