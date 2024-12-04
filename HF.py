@@ -1,7 +1,7 @@
 
 #HashForge is HF.py
 #HashBash will be HB.py
-#This program is meant to locally ingest PII and hash it with a unique salt, for inclusion in a shared (open) database.
+#This module is meant to locally ingest PII and hash it with a unique salt, for inclusion in a shared (open) database.
 #HashBash will generate a hash for a given PII, and then search the database for a matching hash.
 
 import hashlib
