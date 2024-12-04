@@ -11,7 +11,7 @@ import csv
 import argon2
 
 # Database file
-DB_FILE = "secure_database.db"
+DB_FILE = "OpenAgeCheck.db"
 
 # Initialize the database
 def initialize_database():

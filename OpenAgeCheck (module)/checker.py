@@ -5,7 +5,7 @@ from datetime import datetime
 import argon2
 
 # Database file location (ensure this points to the existing database)
-DB_FILE = "secure_database.db"
+DB_FILE = "OpenAgeCheck.db"
 
 # Standardize and validate data
 def standardize_data(first_name, middle_initial, last_name, dob, address):

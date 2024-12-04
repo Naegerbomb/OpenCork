@@ -1,6 +1,8 @@
+OpenCork is VERY MUCH a work in progress.  I'm beginning with standalone modules that can be run independently on data in batches for an MVP, then I'll work on making them more integrated and automated. 
+
 # OpenCork
 
-**OpenCork** is an open-source DtC-focused compliance tool designed for U.S.-based small wineries, crafted to simplify reporting and compliance processes while being free, accessible, and customizable. Built with Python, OpenCork focuses on providing essential compliance features without the complexity or cost of traditional platforms.
+**OpenCork** is a set of open-source DtC-focused compliance tools designed for U.S.-based small wineries, crafted to simplify reporting and compliance processes while being free, accessible, and customizable. Built with Python, OpenCork focuses on providing essential compliance features without the complexity or cost of traditional compliance platforms meant for the wine industry.
 
 ---
 
@@ -19,11 +21,12 @@ To empower wineries with an open-source solution that eliminates the high costs 
 2. **Reporting**  
    - Generate customizable reports for tax filing and compliance tracking.  
    - Export reports in CSV or PDF formats.  
+   - Provides a guided "walkthrough" for filing in each state, empowering you to "auto-file" on your own and save a ton of cash in just a few clicks.
 
 3. **Age Verification**  
    - Securely process customer IDs for manual and/or automated age verification.
-   - Access to a database of securely tokenized verified customers which cannot be reverse-engineered.  Contribute to a community of DtC operators to create 100% free age verification.
-   - Optional API integration for automated verification using paid tools (e.g., IDology).  
+   - Access to a database of secure hashes representing verified customers.  Contribute to a community of DtC operators creating 100% free age verification.
+   - Optional API integration for automated verification using paid 3rd party tools (e.g., IDology).  
 
 4. **License Management**  
    - Track license details and renewal dates.  
