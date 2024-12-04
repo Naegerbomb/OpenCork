@@ -2,6 +2,7 @@ import hashlib
 import sqlite3
 import csv
 from datetime import datetime
+import argon2
 
 # Database file location (ensure this points to the existing database)
 DB_FILE = "secure_database.db"
@@ -17,8 +18,9 @@ def standardize_data(first_name, middle_initial, last_name, dob, address):
 
 # Generate hash with provided data and salt
 def generate_hash(data, salt):
+    ph = argon2.PasswordHasher()
     combined = data + salt
-    return hashlib.sha256(combined.encode()).hexdigest()
+    return ph.hash(combined)
 
 # Verify if a hash exists in the database and return the age verified status
 def verify_hash_in_database(first_name, middle_initial, last_name, dob, address):
@@ -37,14 +39,21 @@ def verify_hash_in_database(first_name, middle_initial, last_name, dob, address)
     rows = cursor.fetchall()
     conn.close()
     
+    # Instantiate PasswordHasher
+    ph = argon2.PasswordHasher()
+    
     # Check each entry in the database
     for row in rows:
         db_hash, db_salt, age_verified = row
-        computed_hash = generate_hash(formatted_data, db_salt)
-        if computed_hash == db_hash:
+        try:
+            ph.verify(db_hash, formatted_data + db_salt)
+            print(f"Debug: Found matching entry for {first_name} {last_name}. Age Verified: {age_verified}")
             return age_verified  # Return "Yes" or "No" from the database
+        except argon2.exceptions.VerifyMismatchError:
+            continue
     
-    return "No"  # If no match is found
+    print(f"Debug: No matching entry found for {first_name} {last_name}")
+    return None  # If no match is found
 
 # Manual verification
 def manual_verification():
@@ -71,6 +80,8 @@ def batch_verification_from_csv(file_path):
                 address = row["Address"]
                 
                 status = verify_hash_in_database(first_name, middle_initial, last_name, dob, address)
+                if status is None:
+                    status = "No (not in database)"
                 results.append({
                     "First Name": first_name,
                     "Middle Initial": middle_initial,

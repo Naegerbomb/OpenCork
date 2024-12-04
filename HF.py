@@ -1,4 +1,3 @@
-
 #HashForge is HF.py
 #HashBash will be HB.py
 #This module is meant to locally ingest PII and hash it with a unique salt, for inclusion in a shared (open) database.
@@ -9,6 +8,7 @@ import os
 import sqlite3
 from datetime import datetime
 import csv
+import argon2
 
 # Database file
 DB_FILE = "secure_database.db"
@@ -40,8 +40,9 @@ def standardize_data(first_name, middle_initial, last_name, dob, address):
 
 # Generate hash with unique salt
 def generate_hash(data, salt):
+    ph = argon2.PasswordHasher()
     combined = data + salt
-    return hashlib.sha256(combined.encode()).hexdigest()
+    return ph.hash(combined)
 
 # Check for duplicates
 def is_duplicate(first_name, middle_initial, last_name, dob, address):
@@ -60,16 +61,22 @@ def is_duplicate(first_name, middle_initial, last_name, dob, address):
     rows = cursor.fetchall()
     conn.close()
     
+    # Instantiate PasswordHasher
+    ph = argon2.PasswordHasher()
+    
     # Check for existing hash
     for db_hash, db_salt in rows:
-        computed_hash = generate_hash(formatted_data, db_salt)
-        if computed_hash == db_hash:
+        try:
+            ph.verify(db_hash, formatted_data + db_salt)
             return True  # Duplicate found
+        except argon2.exceptions.VerifyMismatchError:
+            continue
     
     return False  # No duplicate found
 
 # Add an entry to the database (PII excluded)
 def add_entry_to_database(first_name, middle_initial, last_name, dob, address):
+    print(f"Debug: Adding entry for {first_name} {middle_initial} {last_name}, DOB: {dob}, Address: {address}")
     if is_duplicate(first_name, middle_initial, last_name, dob, address):
         print("Duplicate entry found. Skipping addition.")
         return
@@ -84,10 +91,17 @@ def add_entry_to_database(first_name, middle_initial, last_name, dob, address):
     
     # Format data for hashing
     formatted_data = f"{first_name}|{middle_initial}|{last_name}|{dob}|{address}"
+    print(f"Formatted data (password): {formatted_data}")
     hash_value = generate_hash(formatted_data, salt)
     
     # Extract metadata: initials only
     initials = f"{first_name[0]}{middle_initial}{last_name[0]}"
+    
+    # Determine age verification status
+    birth_date = datetime.strptime(dob, "%m-%d-%Y")
+    age = (datetime.now() - birth_date).days // 365
+    age_verified = "Yes" if age >= 18 else "No"
+    print(f"Debug: Calculated age for {first_name} {last_name} is {age}. Age Verified: {age_verified}")
     
     # Add to database
     conn = sqlite3.connect(DB_FILE)
@@ -95,7 +109,7 @@ def add_entry_to_database(first_name, middle_initial, last_name, dob, address):
     cursor.execute("""
         INSERT INTO entries (hash, salt, age_verified, initials)
         VALUES (?, ?, ?, ?)
-    """, (hash_value, salt, "Yes", initials))
+    """, (hash_value, salt, age_verified, initials))
     conn.commit()
     conn.close()
     print(f"Entry added for customer: {initials}")
@@ -108,6 +122,7 @@ def manual_input():
     last_name = input("Last Name: ")
     dob = input("Date of Birth (MM-DD-YYYY): ")
     address = input("Address: ")
+    print(f"Debug: Received manual input - {first_name} {middle_initial} {last_name}, DOB: {dob}, Address: {address}")
     add_entry_to_database(first_name, middle_initial, last_name, dob, address)
 
 # Batch input from CSV
@@ -116,6 +131,7 @@ def batch_input_from_csv(file_path):
         with open(file_path, newline="") as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
+                print(f"Debug: Processing CSV line - {row['First Name']} {row.get('Middle Initial', '')} {row['Last Name']}, DOB: {row['DOB']}, Address: {row['Address']}")
                 add_entry_to_database(
                     row["First Name"], 
                     row.get("Middle Initial", ""), 
