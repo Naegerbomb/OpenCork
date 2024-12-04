@@ -7,8 +7,8 @@
 import hashlib
 import os
 import sqlite3
-import csv
 from datetime import datetime
+import csv
 
 # Database file
 DB_FILE = "secure_database.db"
@@ -31,26 +31,49 @@ def initialize_database():
 
 # Standardize and validate data
 def standardize_data(first_name, middle_initial, last_name, dob, address):
-    # Ensure all fields are properly formatted
     first_name = first_name.strip().title()
     middle_initial = middle_initial.strip().upper() if middle_initial else ""
     last_name = last_name.strip().title()
     dob = datetime.strptime(dob.strip(), "%m-%d-%Y").strftime("%m-%d-%Y")
-    address = standardize_address(address)
-    
+    address = address.strip().title()
     return first_name, middle_initial, last_name, dob, address
-
-def standardize_address(address):
-    # Mock USPS address standardization (replace with USPS API calls if available)
-    return address.strip().title()  # Basic title casing for now
 
 # Generate hash with unique salt
 def generate_hash(data, salt):
     combined = data + salt
     return hashlib.sha256(combined.encode()).hexdigest()
 
+# Check for duplicates
+def is_duplicate(first_name, middle_initial, last_name, dob, address):
+    # Standardize inputs
+    first_name, middle_initial, last_name, dob, address = standardize_data(
+        first_name, middle_initial, last_name, dob, address
+    )
+    
+    # Format data for hashing
+    formatted_data = f"{first_name}|{middle_initial}|{last_name}|{dob}|{address}"
+    
+    # Open database connection
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("SELECT hash, salt FROM entries")
+    rows = cursor.fetchall()
+    conn.close()
+    
+    # Check for existing hash
+    for db_hash, db_salt in rows:
+        computed_hash = generate_hash(formatted_data, db_salt)
+        if computed_hash == db_hash:
+            return True  # Duplicate found
+    
+    return False  # No duplicate found
+
 # Add an entry to the database (PII excluded)
 def add_entry_to_database(first_name, middle_initial, last_name, dob, address):
+    if is_duplicate(first_name, middle_initial, last_name, dob, address):
+        print("Duplicate entry found. Skipping addition.")
+        return
+    
     # Standardize inputs
     first_name, middle_initial, last_name, dob, address = standardize_data(
         first_name, middle_initial, last_name, dob, address
@@ -66,7 +89,7 @@ def add_entry_to_database(first_name, middle_initial, last_name, dob, address):
     # Extract metadata: initials only
     initials = f"{first_name[0]}{middle_initial}{last_name[0]}"
     
-    # Add to database (exclude raw PII)
+    # Add to database
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
     cursor.execute("""
