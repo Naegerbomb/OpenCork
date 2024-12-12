@@ -1,9 +1,9 @@
 import os
 import json
 import requests
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
-def load_config(file_path='ShopSetupConfig.json'):
+def load_config(file_path='Ignored Files/ShopSetupConfig.json'):
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"Error: The configuration file '{file_path}' does not exist.")
     with open(file_path, 'r') as file:
@@ -26,13 +26,25 @@ def fetch_orders(config, start_date, end_date):
     response.raise_for_status()
     return response.json()
 
+def save_orders_to_file(orders, file_path='Ignored Files/orders.json'):
+    directory = os.path.dirname(file_path)
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    with open(file_path, 'w', encoding='utf-8') as file:
+        json.dump(orders, file, ensure_ascii=False, indent=4)
+
+def print_order_ids(orders):
+    for order in orders.get('orders', []):
+        print(f"Order ID: {order['id']}")
+
 def main():
     try:
         config = load_config()
-        end_date = datetime.utcnow()
-        start_date = end_date - timedelta(days=7)
+        end_date = datetime.now(timezone.utc)
+        start_date = end_date - timedelta(days=3)
         orders = fetch_orders(config, start_date, end_date)
-        print("Orders:", json.dumps(orders, indent=2))
+        save_orders_to_file(orders)
+        print_order_ids(orders)
     except FileNotFoundError as fnf_error:
         print(fnf_error)
     except requests.exceptions.HTTPError as http_error:
