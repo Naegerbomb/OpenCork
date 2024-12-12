@@ -1,80 +1,44 @@
-import json
 import os
-import ssl
+import json
 import requests
-import certifi
-from datetime import datetime, timedelta, timezone
-from requests.adapters import HTTPAdapter
-from urllib3.util.ssl_ import create_urllib3_context
-
-
-class TLSAdapter(HTTPAdapter):
-    """Transport adapter that enforces a minimum TLS version."""
-    def __init__(self, *args, **kwargs):
-        self.ssl_context = create_urllib3_context()
-        self.ssl_context.minimum_version = ssl.TLSVersion.TLSv1_2
-        super().__init__(*args, **kwargs)
-
-    def init_poolmanager(self, *args, **kwargs):
-        kwargs['ssl_context'] = self.ssl_context
-        return super().init_poolmanager(*args, **kwargs)
-
-    def proxy_manager_for(self, *args, **kwargs):
-        kwargs['ssl_context'] = self.ssl_context
-        return super().proxy_manager_for(*args, **kwargs)
-
+from datetime import datetime, timedelta
 
 def load_config(file_path='ShopSetupConfig.json'):
-    """Load configuration data from a JSON file."""
     if not os.path.exists(file_path):
-        raise FileNotFoundError(f"The configuration file '{file_path}' does not exist.")
+        raise FileNotFoundError(f"Error: The configuration file '{file_path}' does not exist.")
     with open(file_path, 'r') as file:
         return json.load(file)
 
-
-def get_week_date_range():
-    """Calculate the start and end dates of the current week (Monday to Sunday)."""
-    today = datetime.now(timezone.utc)
-    start_of_week = today - timedelta(days=today.weekday())  # Monday
-    end_of_week = start_of_week + timedelta(days=6)  # Sunday
-    return start_of_week, end_of_week
-
-
 def fetch_orders(config, start_date, end_date):
-    """Fetch orders from Shopify within the specified date range."""
-    url = f"https://{config['shop_name']}.myshopify.com/admin/api/2023-10/orders.json"
+    shop_name = config['shop_name']
+    access_token = config['access_token']
+    url = f"https://{shop_name}.myshopify.com/admin/api/2023-10/orders.json"
     headers = {
-        'X-Shopify-Access-Token': config['api_key'],
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json",
+        "X-Shopify-Access-Token": access_token
     }
     params = {
-        'created_at_min': start_date.isoformat(),
-        'created_at_max': end_date.isoformat(),
-        'status': 'any'
+        "created_at_min": start_date.isoformat(),
+        "created_at_max": end_date.isoformat(),
+        "status": "any"
     }
-    session = requests.Session()
-    session.mount('https://', TLSAdapter())
-    response = session.get(url, headers=headers, params=params, verify=certifi.where())
+    response = requests.get(url, headers=headers, params=params)
     response.raise_for_status()
-    return response.json().get('orders', [])
-
-
-def display_orders(orders):
-    """Display basic attributes of the fetched orders."""
-    if not orders:
-        print("No orders found for the current week.")
-        return
-    print(f"Found {len(orders)} order(s) placed this week:")
-    for order in orders:
-        print(f"Order ID: {order['id']}, Total Price: {order['total_price']}, Created At: {order['created_at']}")
-
+    return response.json()
 
 def main():
-    config = load_config()
-    start_date, end_date = get_week_date_range()
-    orders = fetch_orders(config, start_date, end_date)
-    display_orders(orders)
-
+    try:
+        config = load_config()
+        end_date = datetime.utcnow()
+        start_date = end_date - timedelta(days=7)
+        orders = fetch_orders(config, start_date, end_date)
+        print("Orders:", json.dumps(orders, indent=2))
+    except FileNotFoundError as fnf_error:
+        print(fnf_error)
+    except requests.exceptions.HTTPError as http_error:
+        print(f"HTTP error occurred: {http_error}")
+    except Exception as err:
+        print(f"An error occurred: {err}")
 
 if __name__ == "__main__":
     main()

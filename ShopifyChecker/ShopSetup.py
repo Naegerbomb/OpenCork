@@ -13,9 +13,7 @@ def get_user_input(existing_config):
     config_data = existing_config.copy()
     print("Please enter the following configuration details (leave blank to keep existing values):")
     config_data['shop_name'] = input(f"Shop Name [{existing_config.get('shop_name', '')}]: ") or existing_config.get('shop_name', '')
-    config_data['api_key'] = input(f"API Key [{existing_config.get('api_key', '')}]: ") or existing_config.get('api_key', '')
-    config_data['api_secret'] = input(f"API Secret [{existing_config.get('api_secret', '')}]: ") or existing_config.get('api_secret', '')
-    config_data['other_setting'] = input(f"Other Setting [{existing_config.get('other_setting', '')}]: ") or existing_config.get('other_setting', '')
+    config_data['access_token'] = input(f"Admin API Access Token [{existing_config.get('access_token', '')}]: ") or existing_config.get('access_token', '')
     return config_data
 
 def save_config_file(config_data, filename='ShopSetupConfig.json'):
