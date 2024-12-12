@@ -41,7 +41,7 @@ def main():
     try:
         config = load_config()
         end_date = datetime.now(timezone.utc)
-        start_date = end_date - timedelta(days=3)
+        start_date = end_date - timedelta(days=7)
         orders = fetch_orders(config, start_date, end_date)
         save_orders_to_file(orders)
         print_order_ids(orders)
