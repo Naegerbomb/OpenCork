@@ -98,7 +98,7 @@ def batch_verification_from_csv(file_path):
 
 # Main entry point for standalone execution
 if __name__ == "__main__":
-    print("Standalone Age Verification Module: checker.py")
+    print("Standalone Age Verification Module: HB.py")
     print("===============================================")
     print("\nMenu:")
     print("1. Verify customer manually")
