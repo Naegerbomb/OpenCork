@@ -109,6 +109,6 @@ You are free to use, modify, and distribute this software, but any modifications
 
 ## **Contact**
 
-Have questions or feedback? Reach out to the OpenCork team at [your-email@example.com].
+Have questions or feedback? Reach out to the OpenCork team at green.james.green@gmail.com
 
 Let’s make compliance easier—together!
